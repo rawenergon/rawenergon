@@ -12,19 +12,65 @@ permissions:
   contents: write
 
 jobs:
-  markscribe:
+  update-readme:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate README
-        uses: taciturnaxolotl/markscribe@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
-          WAKATIME_URL: "https://hackatime.hackclub.com/api/v1/"
-        with:
-          args: -write README.md README.md.tpl
+      - name: Generate README from Hackatime
+        run: |
+          python - << 'EOF'
+          import urllib.request, json, re
+
+          url = "https://hackatime.hackclub.com/api/v1/users/U0B0WSXLF47/stats?features=languages,projects"
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          resp = json.loads(urllib.request.urlopen(req).read().decode())
+          data = resp["data"]
+
+          def format_time(hours, minutes, seconds):
+              if hours > 0:
+                  return f"{hours}h {minutes}m {seconds}s"
+              if minutes > 0:
+                  return f"{minutes}m {seconds}s"
+              return f"{seconds}s"
+
+          def bar(percent, bar_width=25):
+              filled = int(percent / (100 / bar_width))
+              return "█" * filled + "░" * (bar_width - filled) + f"  {percent:.2f}%"
+
+          def render_double_bar(langs, projects, count=10):
+              langs = sorted(langs, key=lambda x: x.get("percent", 0), reverse=True)[:count]
+              projs = sorted(projects, key=lambda x: x.get("percent", 0), reverse=True)[:count]
+
+              all_items = langs + projs
+              longest_name = max((len(x["name"]) for x in all_items), default=0)
+              times = [format_time(x.get("hours", 0), x.get("minutes", 0), int(x.get("total_seconds", 0)) % 60) for x in all_items]
+              longest_time = max((len(t) for t in times), default=0)
+
+              lines = ["Languages:"]
+              for x in langs:
+                  t_str = format_time(x.get("hours", 0), x.get("minutes", 0), int(x.get("total_seconds", 0)) % 60)
+                  lines.append(f"{x['name']:<{longest_name + 2}} {t_str:<{longest_time + 2}} {bar(x['percent'])}")
+
+              lines.append("")
+              lines.append("Projects:")
+              for x in projs:
+                  t_str = format_time(x.get("hours", 0), x.get("minutes", 0), int(x.get("total_seconds", 0)) % 60)
+                  lines.append(f"{x['name']:<{longest_name + 2}} {t_str:<{longest_time + 2}} {bar(x['percent'])}")
+
+              return "\n".join(lines)
+
+          rendered = render_double_bar(data.get("languages", []), data.get("projects", []))
+
+          with open("README.md.tpl", "r", encoding="utf-8") as f:
+              template = f.read()
+
+          pattern = r'\{\{\s*wakatimeDoubleCategoryBar[^\}]+\}\}'
+          final_readme = re.sub(pattern, rendered, template)
+
+          with open("README.md", "w", encoding="utf-8") as f:
+              f.write(final_readme)
+          EOF
 
       - name: Commit and Push
         run: |
