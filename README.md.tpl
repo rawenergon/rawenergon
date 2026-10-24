@@ -12,3 +12,11 @@
 
 ```text
 {{ wakatimeDoubleCategoryBar "Languages:" wakatimeData.Languages "Projects:" wakatimeData.Projects 10 }}
+```
+
+---
+
+<p align="center">
+  <a href="https://github.com/rawenergon">GitHub</a> &bull;
+  <a href="https://hackatime.hackclub.com/api/v1/users/U0B0WSXLF47/stats">Live JSON</a>
+</p>
