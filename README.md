@@ -3,7 +3,6 @@
 # Aditya Raj
 
 [![Hackatime Total Time](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fhackatime.hackclub.com%2Fapi%2Fv1%2Fusers%2FU0B0WSXLF47%2Fstats&query=%24.data.human_readable_total&label=Hackatime&color=ec3750&style=for-the-badge)](https://hackatime.hackclub.com)
-[![Coding Status](https://hackatime.hackclub.com/api/v1/badge/34049/python?label=Currently%20Coding&color=2ea44f&style=for-the-badge)](https://hackatime.hackclub.com)
 
 <br/>
 
